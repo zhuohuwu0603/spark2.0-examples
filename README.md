@@ -40,3 +40,4 @@ https://blog.knoldus.com/2014/10/14/sbt-dependency-tree/
 http://xerial.org/blog/2014/03/27/visualizing-project-dependencies-in-sbt/
 
 
+# Add sbt-assembly plugin: TODO
