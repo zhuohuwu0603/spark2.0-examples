@@ -1,5 +1,6 @@
 package com.madhukaraphatak.examples.sparktwo
 
+import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -8,8 +9,11 @@ import org.apache.spark.sql.SparkSession
   */
 object SparkSessionExample {
 
+  val logger = Logger.getLogger(SparkSessionExample.getClass)
+
   def main(args: Array[String]) {
 
+    logger.warn("Beginning of SparkSessionExample.")
     val sparkSession = SparkSession.builder.
       master("local")
       .appName("spark session example")
