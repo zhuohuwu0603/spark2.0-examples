@@ -1,4 +1,4 @@
-package com.madhukaraphatak.examples.sparktwo
+package com.zhuohuawu.examples.sparktwo
 
 import org.apache.spark.sql.SparkSession
 

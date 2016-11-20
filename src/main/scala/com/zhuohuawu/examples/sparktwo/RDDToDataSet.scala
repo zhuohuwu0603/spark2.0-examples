@@ -1,4 +1,4 @@
-package com.madhukaraphatak.examples.sparktwo
+package com.zhuohuawu.examples.sparktwo
 
 import org.apache.spark.sql.types.{DoubleType, StringType, StructField, StructType}
 import org.apache.spark.sql.{Row, SparkSession}

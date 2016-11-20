@@ -41,3 +41,8 @@ http://xerial.org/blog/2014/03/27/visualizing-project-dependencies-in-sbt/
 
 
 # Add sbt-assembly plugin: TODO
+
+## links:
+
+- sbt-assembly migration: https://github.com/sbt/sbt-assembly/blob/master/Migration.md
+- scala plugin bet practice: http://www.scala-sbt.org/0.13/docs/Plugins-Best-Practices.html
