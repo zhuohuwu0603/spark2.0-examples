@@ -1,7 +1,6 @@
 Examples for Spark 2.0 release.
 
 # Build
-
     sbt clean package
     
     
@@ -21,3 +20,23 @@ Examples for Spark 2.0 release.
         
      - Spark code style guild: https://cwiki.apache.org/confluence/display/SPARK/Spark+Code+Style+Guide
      - Databricks Scala Guide: https://github.com/databricks/scala-style-guide
+     
+# View sbt dependencies:
+     - sbt "inspect tree clean" //no need to add the sbt-dependency-graph plug-in
+     - sbt dependencyTree
+     - sbt dependencyBrowseGraph
+
+## More reference: 
+- official github for sbt-dependency-graph:
+https://github.com/jrudolph/sbt-dependency-graph
+
+- scala official, how to use plugins: 
+http://www.scala-sbt.org/0.13/docs/Using-Plugins.html
+
+- SBT-dependency tree, October 14, 2014	by Satendra Kumar
+https://blog.knoldus.com/2014/10/14/sbt-dependency-tree/
+     
+- Visualizing Project Dependencies in Sbt 
+http://xerial.org/blog/2014/03/27/visualizing-project-dependencies-in-sbt/
+
+
