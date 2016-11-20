@@ -1,11 +1,36 @@
+//name := "SparkTwoExperiments"
+//
+//version := "1.0"
+//
+//scalaVersion := "2.11.6"
+//
+//val sparkVersion = "2.0.1"
+//
+//resolvers ++= Seq(
+//  "apache-snapshots" at "http://repository.apache.org/snapshots/"
+//)
+//
+//libraryDependencies ++= Seq(
+//  "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+//  "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
+//  "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
+//  "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
+//  "org.apache.spark" %% "spark-hive" % sparkVersion% "provided",
+//  "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+//)
+
+
+
 import Resolvers._
 import Dependencies._
 import sbt._
 import Keys._
 
+name := "SparkTwoExperiments"
 
+version := "1.0"
 
-
+scalaVersion := "2.11.6"
 
 resolvers ++= Seq(
   clojars,
@@ -15,21 +40,20 @@ resolvers ++= Seq(
 
 
 libraryDependencies ++= Seq(
-  //    cassandra.exclude("com.carrotsearch", "hppc"),
-  //    kafka,
-  //    elasticsearch,
+      cassandra.exclude("com.carrotsearch", "hppc"),
+      kafka,
+      elasticsearch,
       (spark_core).exclude("net.java.dev.jets3t", "jets3t"),
-  //    (spark_cassandra_connector).exclude("org.apache.cassandra", "cassandra-clientutil"),
+      (spark_cassandra_connector).exclude("org.apache.cassandra", "cassandra-clientutil"),
       spark_sql,
       spark_streaming ,
       spark_mllib,
       spark_hive,
-      scalatest
-  //    spark_streaming_kafka,
-  //    mysql_connector_java,
-  //    mysql_connector_mxj,
-  //    mysql_connector_mxj_db_file
-
+      scalatest,
+      spark_streaming_kafka,
+      mysql_connector_java,
+      mysql_connector_mxj,
+      mysql_connector_mxj_db_file
 )
 
 
@@ -70,6 +94,18 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly)
           case "properties.dtd" => MergeStrategy.last
           case _ => MergeStrategy.first
         }
+}
+
+assemblyShadeRules in assembly := Seq(
+  ShadeRule.rename("org.apache.commons.beanutils.**" -> "org.apache.commons.shadebeanutils.@1").inAll,
+  ShadeRule.rename("org.apache.http.**" -> "org.apache.shadehttp.@1").inAll
+)
+
+assemblyExcludedJars in assembly := {
+  val cp = (fullClasspath in assembly).value
+  cp.filter(file => {
+    file.data.getName == "metrics-core-3.0.1.jar" || file.data.getName == "commons-beanutils-1.8.0.jar"
+  })
 }
 
 //name := "SparkTwoExperiments"
@@ -169,27 +205,4 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly)
 ////    mysql_connector_mxj,
 ////    mysql_connector_mxj_db_file
 //  )
-//)
-
-
-name := "SparkTwoExperiments"
-
-version := "1.0"
-//
-scalaVersion := "2.11.6"
-//
-//val sparkVersion = "2.0.1"
-
-
-//resolvers ++= Seq(
-//  "apache-snapshots" at "http://repository.apache.org/snapshots/"
-//)
-//
-//libraryDependencies ++= Seq(
-//  "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
-//  "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
-//  "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
-//  "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
-//  "org.apache.spark" %% "spark-hive" % sparkVersion% "provided",
-//  "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 //)
