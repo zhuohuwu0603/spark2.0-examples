@@ -18,3 +18,6 @@ Examples for Spark 2.0 release.
         - addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.8.0")
      - Usage: sbt scalastyleGenerateConfig: create a scalastyle-config.xml in the current directory
         - check the scala style: sbt scalastyle
+        
+     - Spark code style guild: https://cwiki.apache.org/confluence/display/SPARK/Spark+Code+Style+Guide
+     - Databricks Scala Guide: https://github.com/databricks/scala-style-guide
