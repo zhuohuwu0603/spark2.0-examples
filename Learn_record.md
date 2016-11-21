@@ -40,3 +40,10 @@
 ... 
 
 ### Solution: 
+
+
+
+
+# Problems
+
+## Can't have both StreamingTest.scala and WordCounterTest.scala running. 

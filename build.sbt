@@ -35,7 +35,9 @@ scalaVersion := "2.11.6"
 resolvers ++= Seq(
   clojars,
   maven_local,
-  snapshot_remote1
+  snapshot_remote1,
+  mvnrepository
+  //mvnCentral
 )
 
 
@@ -50,7 +52,10 @@ libraryDependencies ++= Seq(
       spark_mllib,
       spark_hive,
       scalatest,
+      junit,
+      log4j,
       spark_streaming_kafka,
+      spark_testing_base,
       mysql_connector_java,
       mysql_connector_mxj,
       mysql_connector_mxj_db_file
