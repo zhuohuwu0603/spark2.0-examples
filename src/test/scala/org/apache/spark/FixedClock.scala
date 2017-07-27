@@ -1,3 +1,4 @@
+/*
 package org.apache.spark
 
 import java.util.Date
@@ -29,3 +30,4 @@ class FixedClock(var currentTime: Long) extends org.apache.spark.util.Clock {
     getTimeMillis()
   }
 }
+*/

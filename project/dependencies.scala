@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   val scala_main_version = "2.11"
-  val spark_version = "2.0.1"
+  val spark_version = "2.1.1"
 
   val scala_compiler = "org.scala-lang" % "scala-compiler" % "2.11.6"
 
@@ -23,10 +23,10 @@ object Dependencies {
   val log4j = "log4j" % "log4j" % "1.2.17.redhat-1"
 
 
-  val spark_streaming_kafka =   ("org.apache.spark" % s"spark-streaming-kafka_${scala_main_version}" % "1.6.2")
+  val spark_streaming_kafka =   ("org.apache.spark" % s"spark-streaming-kafka-0-8_${scala_main_version}" % spark_version)
     .exclude("org.spark-project.spark", "unused")
 
-  val spark_cassandra_connector = ("com.datastax.spark" % s"spark-cassandra-connector_${scala_main_version}" % "1.6.2")
+  val spark_cassandra_connector = ("com.datastax.spark" % s"spark-cassandra-connector_${scala_main_version}" % "2.0.3")
     .exclude("com.codahale.metrics", "metrics-core")
     .exclude("io.netty", "netty-handler")
     .exclude("io.netty", "netty-buffer")
@@ -71,7 +71,7 @@ object Dependencies {
 
   val apache_http_client = "org.apache.httpcomponents" % "httpclient" % "4.5.2"
 
-  val spark_testing_base = "com.holdenkarau" % "spark-testing-base_2.11" % "1.6.1_0.3.2"
+  val spark_testing_base = "com.holdenkarau" % "spark-testing-base_2.11" % "2.2.0_0.7.2" % "test"
 
   val default_dependencies_seq = Seq(
     (spark_core)

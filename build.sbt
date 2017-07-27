@@ -61,7 +61,7 @@ libraryDependencies ++= Seq(
       mysql_connector_mxj_db_file
 )
 
-
+/*
 mergeStrategy in assembly <<= (mergeStrategy in assembly)
 {
   (old) =>
@@ -111,7 +111,7 @@ assemblyExcludedJars in assembly := {
   cp.filter(file => {
     file.data.getName == "metrics-core-3.0.1.jar" || file.data.getName == "commons-beanutils-1.8.0.jar"
   })
-}
+}*/
 
 //name := "SparkTwoExperiments"
 //

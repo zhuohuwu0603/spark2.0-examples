@@ -1,3 +1,4 @@
+/*
 package org.apache.spark.streaming
 
 import org.apache.spark.FixedClock
@@ -7,3 +8,4 @@ object Clock {
     ssc.scheduler.clock.asInstanceOf[FixedClock]
   }
 }
+*/
