@@ -26,7 +26,7 @@ import Dependencies._
 import sbt._
 import Keys._
 
-name := "SparkTwoExperiments"
+name := "SparkTwoKevinExperiments"
 
 version := "1.0"
 

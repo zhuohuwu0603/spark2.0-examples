@@ -1,3 +1,4 @@
+/*
 package com.zhuohuawu.examples.sparktwo
 
 import org.apache.spark.rdd.RDD
@@ -31,4 +32,4 @@ class WordCounterTest extends FlatSpec with Matchers with BeforeAndAfter {
 
     wordCounts.collect() should contain allOf (("Hello", 2), ("Spark", 1), ("world", 1))
   }
-}
+}*/
