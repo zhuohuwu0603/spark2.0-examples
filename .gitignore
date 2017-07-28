@@ -9,3 +9,5 @@ dependency-reduced-pom.xml
 
 /src/main/resources/zip.csv/
 /spark-warehouse/
+/src/main/resources/stream/ck/
+/src/main/resources/stream/out/
