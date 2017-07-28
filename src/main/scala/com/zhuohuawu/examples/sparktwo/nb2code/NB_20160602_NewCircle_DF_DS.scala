@@ -1,4 +1,4 @@
-package com.zhuohuawu.examples.sparktwo.experiment
+package com.zhuohuawu.examples.sparktwo.nb2code
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
@@ -11,13 +11,13 @@ import org.apache.spark.sql.SparkSession
 // https://community.cloud.databricks.com/?o=8920468172695095#notebook/3588089277658157/command/3588089277658225
 // convert from 20160602_NewCircle_DF_DS notebook
 // download source file: %sh wget http://media.mongodb.org/zips.json
-object NewCircleDFDSExample {
+object NB_20160602_NewCircle_DF_DS {
 
-  val logger = Logger.getLogger(NewCircleDFDSExample.getClass)
+  val logger = Logger.getLogger(NB_20160602_NewCircle_DF_DS.getClass)
 
   def main(args: Array[String]) {
     Logger.getLogger("org").setLevel(Level.ERROR)
-    Logger.getLogger(NewCircleDFDSExample.getClass).setLevel(Level.INFO)
+    Logger.getLogger(NB_20160602_NewCircle_DF_DS.getClass).setLevel(Level.INFO)
 
     logger.warn("Beginning of NewCircleDFDSExample.")
     val spark = SparkSession.builder.
