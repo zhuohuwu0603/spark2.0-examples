@@ -1,8 +1,11 @@
 *.iml
 .idea/
-*.iml
 target/
 project/target
 dependency-reduced-pom.xml
 *.pdf
 /logs/
+
+
+/src/main/resources/zip.csv/
+/spark-warehouse/
