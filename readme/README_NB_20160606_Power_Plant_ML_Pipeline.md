@@ -20,12 +20,16 @@ Inputfile:
         
         downloaded from: https://archive.ics.uci.edu/ml/datasets/Combined+Cycle+Power+Plant
         put it in: spark2.0-examples/src/main/resources/power-plant/data/Folds5x2_pp.xlsx
+                
+        If want more accuracy: uncomment dt.setMaxBins(10) with dt.setMaxBins(100)
+         
+         and     //gbt.setMaxBins(100)
+                 //gbt.setMaxIter(120)
+                 
+         It will take about 9 minutes to finish. 
+            
         
-Output file:
-        spark2.0-examples/src/main/resources/stream/ck
-        spark2.0-examples/src/main/resources/stream/out/_spark_metadata
-        
-## add net.liftweb	lift-json_2.11 as external jar 
+## add net.liftweb	lift-json_2.11 as external jar  (optional), just show how to add a jar dependency
         
 IntelliJ IDEA 15 & 2016
 - File > Project Structure... or press Ctrl + Alt + Shift + S.
