@@ -1,8 +1,13 @@
 package com.zhuohuawu.examples.sparktwo.nb2code
 
 import org.apache.log4j.{Level, Logger}
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
+import org.apache.spark.ml.{Model, Pipeline, PipelineModel}
+import org.apache.spark.mllib.evaluation.RegressionMetrics
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 /**
   * Spark Session example
@@ -14,18 +19,18 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 // download source file: https://archive.ics.uci.edu/ml/datasets/Combined+Cycle+Power+Plant
 object NB_20160606_Power_Plant_ML_Pipeline {
 
-  val logger = Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass)
+  Logger.getLogger("org").setLevel(Level.WARN)
+  Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass).setLevel(Level.WARN)
+  val logger = Logger.getLogger(NB_20160606_02_Wikipedia_Pageviews.getClass)
 
-  def main3(args: Array[String]): Unit = {
+  val spark = getSparkSession()
+  val sc = spark.sparkContext
+  val sqlContext = spark.sqlContext
+  val ssc = new StreamingContext(sc, Seconds(2))
 
-    Logger.getLogger("org").setLevel(Level.WARN)
-    Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass).setLevel(Level.WARN)
+  def main2(args: Array[String]): Unit = {
 
     logger.error("Beginning of NB_20160606_Power_Plant_ML_Pipeline.")
-    val spark = SparkSession.builder.
-      master("local[4]")
-      .appName("NB_20160606_Power_Plant_ML_Pipeline example")
-      .getOrCreate()
 
     val sqlDeletePowerPlantPredictions = "DROP TABLE IF EXISTS power_plant_predictions"
 
@@ -42,25 +47,37 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     println("sqlCreatePowerPlantPredictions is executed: ")
     spark.sql(sqlDeletePowerPlantPredictions)
     spark.sql(sqlCreatePowerPlantPredictions)
-
   }
 
-  def main(args: Array[String]) {
-    Logger.getLogger("org").setLevel(Level.WARN)
-    Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass).setLevel(Level.WARN)
-
-    logger.error("Beginning of NB_20160606_Power_Plant_ML_Pipeline.")
+  def getSparkSession(): SparkSession = {
     val spark = SparkSession.builder.
       master("local[4]")
       .appName("NB_20160606_Power_Plant_ML_Pipeline example")
       .getOrCreate()
+    return spark
+  }
 
-    val sc = spark.sparkContext
-    val sqlContext = spark.sqlContext
+  def main(args: Array[String]) {
 
+    logger.error("Beginning of NB_20160606_Power_Plant_ML_Pipeline.")
+
+    readInputData(spark)
+
+    val (vectorizer: VectorAssembler, testSet: Dataset[Row], trainingSet: Dataset[Row], crossval: CrossValidator) = linearRegressionModel()
+
+    decisionTreeModel(vectorizer, testSet, trainingSet, crossval)
+
+    val finalModel = gbtModel(vectorizer, testSet, trainingSet, crossval)
+
+    sparkStreamingPowerPlant(finalModel)
+
+    println("hello, end3")
+  }
+
+  def readInputData(spark: SparkSession): Unit = {
     val inputPath = "src/main/resources/power-plant/data/"
 
-    val rawTextRdd = spark.read.option("header","true").option("inferSchema","true").csv(inputPath)
+    val rawTextRdd = spark.read.option("header", "true").option("inferSchema", "true").csv(inputPath)
     rawTextRdd.take(5).foreach(println)
 
     val powerPlantDF = rawTextRdd
@@ -68,11 +85,8 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     powerPlantDF.createOrReplaceTempView("power_plant")
 
     spark.sql("SELECT * FROM power_plant").show(false)
-
     spark.sql("desc power_plant").show(false)
-
     spark.sqlContext.table("power_plant").describe().show(false)
-
 
     // ANSWER: Do a scatter plot of Power(PE) as a function of Temperature (AT).
     // BONUS: Name the y-axis "Power" and the x-axis "Temperature"
@@ -81,8 +95,9 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     spark.sql("select V as ExhaustVacuum, PE as Power from power_plant").show(false)
 
     spark.sql("select RH Humidity, PE Power from power_plant").show(false)
+  }
 
-
+  private def linearRegressionModel() = {
     // Step 5: Data Preparation
     import org.apache.spark.ml.feature.VectorAssembler
     val dataset = sqlContext.table("power_plant")
@@ -97,9 +112,8 @@ object NB_20160606_Power_Plant_ML_Pipeline {
 
     // ***** LINEAR REGRESSION MODEL ****
 
-    import org.apache.spark.ml.regression.LinearRegression
-    import org.apache.spark.ml.regression.LinearRegressionModel
     import org.apache.spark.ml.Pipeline
+    import org.apache.spark.ml.regression.{LinearRegression, LinearRegressionModel}
 
     // Let's initialize our linear regression learner
     val lr = new LinearRegression()
@@ -116,8 +130,7 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     // Let's first train on the entire dataset to see what we get
     val lrModel = lrPipeline.fit(trainingSet)
 
-
-    def toEquation(model: org.apache.spark.ml.PipelineModel): String = {
+    def toEquation(model: PipelineModel): String = {
       // The intercept is as follows:
       val intercept = lrModel.stages(1).asInstanceOf[LinearRegressionModel].intercept
 
@@ -130,8 +143,7 @@ object NB_20160606_Power_Plant_ML_Pipeline {
       var variables = Array
 
       // Now let's sort the coeffecients from the most to the least and append them to the equation.
-      coefficents.sortByKey().collect().foreach(x =>
-      {
+      coefficents.sortByKey().collect().foreach(x => {
         val weight = Math.abs(x._1)
         val name = x._2
         val symbol = if (x._1 > 0) "+" else "-"
@@ -156,9 +168,9 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val explainedVariance = metrics.explainedVariance
     val r2 = metrics.r2
 
-    println (f"Root Mean Squared Error: $rmse")
-    println (f"Explained Variance: $explainedVariance")
-    println (f"R2: $r2")
+    println(f"Root Mean Squared Error: $rmse")
+    println(f"Explained Variance: $explainedVariance")
+    println(f"R2: $r2")
 
 
     // First we calculate the residual error and divide it by the RMSE
@@ -173,11 +185,9 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val sqlQuery = "SELECT case when Within_RSME <= 1.0 and Within_RSME >= -1.0 then 1  when  Within_RSME <= 2.0 and Within_RSME >= -2.0 then 2 else 3 end RSME_Multiple, COUNT(*) count  from Power_Plant_RMSE_Evaluation\ngroup by case when Within_RSME <= 1.0 and Within_RSME >= -1.0 then 1  when  Within_RSME <= 2.0 and Within_RSME >= -2.0 then 2 else 3 end"
     spark.sql(sqlQuery).show(false)
 
-
-    import org.apache.spark.ml.tuning.{ParamGridBuilder, CrossValidator}
     import org.apache.spark.ml.evaluation._
+    import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
     //first let's use a cross validator to split the data into training and validation subsets
-
 
     //Let's set up our evaluator class to judge the model based on the best root mean squared error
     val regEval = new RegressionEvaluator()
@@ -190,7 +200,6 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     crossval.setEstimator(lrPipeline)
     crossval.setNumFolds(5)
     crossval.setEvaluator(regEval)
-
 
     // Step 7: Tuning and Evaluation
 
@@ -213,13 +222,16 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val explainedVariance2 = metrics2.explainedVariance
     val r2_2 = metrics2.r2
 
-    println (f"Root Mean Squared Error2: " + rmse2)
-    println (f"Explained Variance2: $explainedVariance2")
-    println (f"R2_2: $r2_2")
+    println(f"Root Mean Squared Error2: " + rmse2)
+    println(f"Explained Variance2: $explainedVariance2")
+    println(f"R2_2: $r2_2")
+    (vectorizer, testSet, trainingSet, crossval)
+  }
 
+
+  private def decisionTreeModel(vectorizer: VectorAssembler, testSet: Dataset[Row], trainingSet: Dataset[Row], crossval: CrossValidator) = {
     // Decision tree:
     import org.apache.spark.ml.regression.DecisionTreeRegressor
-
 
     val dt = new DecisionTreeRegressor()
     dt.setLabelCol("PE")
@@ -241,8 +253,8 @@ object NB_20160606_Power_Plant_ML_Pipeline {
 
     val dtModel = crossval.fit(trainingSet)
 
-    import org.apache.spark.ml.regression.DecisionTreeRegressionModel
     import org.apache.spark.ml.PipelineModel
+    import org.apache.spark.ml.regression.DecisionTreeRegressionModel
 
 
     val predictionsAndLabels3 = dtModel.bestModel.transform(testSet)
@@ -252,14 +264,15 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val explainedVariance3 = metrics3.explainedVariance
     val r2_3 = metrics3.r2
 
-    println (f"Root Mean Squared Error3: $rmse3")
-    println (f"Explained Variance3: $explainedVariance3")
-    println (f"R2_3: $r2_3")
+    println(f"Root Mean Squared Error3: $rmse3")
+    println(f"Explained Variance3: $explainedVariance3")
+    println(f"R2_3: $r2_3")
 
     // This line will pull the Decision Tree model from the Pipeline as display it as an if-then-else string
     dtModel.bestModel.asInstanceOf[PipelineModel].stages.last.asInstanceOf[DecisionTreeRegressionModel].toDebugString
+  }
 
-
+  private def gbtModel(vectorizer: VectorAssembler, testSet: Dataset[Row], trainingSet: Dataset[Row], crossval: CrossValidator) = {
     // GBT
     import org.apache.spark.ml.regression.GBTRegressor
 
@@ -297,17 +310,17 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val r2_4 = metrics4.r2
     gbtModel.bestModel.asInstanceOf[PipelineModel].stages.last.asInstanceOf[GBTRegressionModel].toDebugString
 
-    println (f"Root Mean Squared Error4: $rmse4")
-    println (f"Explained Variance4: $explainedVariance4")
-    println (f"R2_4: $r2_4")
-
+    println(f"Root Mean Squared Error4: $rmse4")
+    println(f"Explained Variance4: $explainedVariance4")
+    println(f"R2_4: $r2_4")
 
 
     // Let's set the variable finalModel to our best GBT Model
     val finalModel = gbtModel.bestModel
 
     val sqlDeletePowerPlantPredictions = "DROP TABLE IF EXISTS power_plant_predictions"
-    val sqlCreatePowerPlantPredictions = """CREATE TABLE power_plant_predictions(
+    val sqlCreatePowerPlantPredictions =
+      """CREATE TABLE power_plant_predictions(
       AT Double,
       V Double,
       AP Double,
@@ -321,31 +334,16 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     spark.sql(sqlDeletePowerPlantPredictions)
     spark.sql(sqlCreatePowerPlantPredictions)
 
-//    val powerPlant = rawTextRdd
-//      .map(x => x.split("\t"))
-//      .filter(line => line(0) != "AT")
-//      .map(line => PowerPlantRow(line(0).toDouble, line(1).toDouble, line(2).toDouble, line(3).toDouble, line(4).toDouble))
-//    powerPlant.take(5)
+    finalModel
+  }
 
-
-
+  def sparkStreamingPowerPlant(finalModel: Model[_]) = {
     // Streaming
-
-    import java.nio.ByteBuffer
-    import java.net._
-    import java.io._
-    import scala.io._
-    import sys.process._
     // import org.apache.spark.Logging
-    import org.apache.spark.SparkConf
-    import org.apache.spark.storage.StorageLevel
-    import org.apache.spark.streaming.Seconds
-    import org.apache.spark.streaming.Minutes
-    import org.apache.spark.streaming.StreamingContext
+    import org.apache.spark.streaming.{Seconds, StreamingContext}
     //import org.apache.spark.streaming.StreamingContext.toPairDStreamFunctions
     //import org.apache.log4j.Logger
     //import org.apache.log4j.Level
-    import org.apache.spark.streaming.receiver.Receiver
     import sqlContext._
     //import net.liftweb.json.DefaultFormats
     //import net.liftweb.json._
@@ -359,7 +357,7 @@ object NB_20160606_Power_Plant_ML_Pipeline {
 
     val batchIntervalSeconds = 2
 
-    var newContextCreated = false      // Flag to detect whether new context was created or not
+    var newContextCreated = false // Flag to detect whether new context was created or not
 
     // Function to create a new StreamingContext and set it up
     def creatingFunc(): StreamingContext = {
@@ -371,7 +369,7 @@ object NB_20160606_Power_Plant_ML_Pipeline {
       val dstream = ssc.queueStream(queue)
       dstream.foreachRDD {
         rdd =>
-          if(!(rdd.isEmpty())) {
+          if (!(rdd.isEmpty())) {
             println("rdd is not empty!")
             rdd.take(3).foreach(println)
             finalModel.transform(read.json(rdd).toDF()).write.mode(SaveMode.Overwrite).saveAsTable("power_plant_predictions")
@@ -391,22 +389,21 @@ object NB_20160606_Power_Plant_ML_Pipeline {
       println("Existing context running or recovered from checkpoint, may not be running currently defined creating function")
     }
 
-    println("hello, end1")
-    val abc = 1
-
-    ssc.start()
-
-//   // spark.sql("truncate table power_plant_predictions")
-//    // First we try it with a record from our test set and see what we get:
-//    queue += sc.makeRDD(Seq(s"""{"AT":10.82,"V":37.5,"AP":1009.23,"RH":96.62,"PE":473.9}"""))
-//    spark.sql("select * from power_plant_predictions").show(false)
-//
-//    queue += sc.makeRDD(Seq(s"""{"AT":10.0,"V":40,"AP":1000,"RH":90.0,"PE":0.0}"""))
-//    spark.sql("select * from power_plant_predictions").show(false)
+    //   // spark.sql("truncate table power_plant_predictions")
+    //    // First we try it with a record from our test set and see what we get:
+    //    queue += sc.makeRDD(Seq(s"""{"AT":10.82,"V":37.5,"AP":1009.23,"RH":96.62,"PE":473.9}"""))
+    //    spark.sql("select * from power_plant_predictions").show(false)
+    //
+    //    queue += sc.makeRDD(Seq(s"""{"AT":10.0,"V":40,"AP":1000,"RH":90.0,"PE":0.0}"""))
+    //    spark.sql("select * from power_plant_predictions").show(false)
 
     val sqlString = "select * from power_plant where at between 10 and 11 and AP between 1000 and 1010 and RH between 90 and 97 and v between 37 and 40 order by PE"
     spark.sql(sqlString).show(false)
 
+    println("hello, end1")
+    val abc = 1
+
+    ssc.start()
     println("hello, end2")
   }
 }
