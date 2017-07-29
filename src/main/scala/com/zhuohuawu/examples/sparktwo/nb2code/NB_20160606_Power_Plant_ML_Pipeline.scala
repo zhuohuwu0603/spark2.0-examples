@@ -1,7 +1,8 @@
 package com.zhuohuawu.examples.sparktwo.nb2code
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 /**
   * Spark Session example
@@ -14,6 +15,35 @@ import org.apache.spark.sql.SparkSession
 object NB_20160606_Power_Plant_ML_Pipeline {
 
   val logger = Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass)
+
+  def main3(args: Array[String]): Unit = {
+
+    Logger.getLogger("org").setLevel(Level.WARN)
+    Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass).setLevel(Level.WARN)
+
+    logger.error("Beginning of NB_20160606_Power_Plant_ML_Pipeline.")
+    val spark = SparkSession.builder.
+      master("local[4]")
+      .appName("NB_20160606_Power_Plant_ML_Pipeline example")
+      .getOrCreate()
+
+    val sqlDeletePowerPlantPredictions = "DROP TABLE IF EXISTS power_plant_predictions"
+
+    val sqlCreatePowerPlantPredictions = """CREATE TABLE power_plant_predictions(
+      AT Double,
+      V Double,
+      AP Double,
+      RH Double,
+      PE Double,
+      Predicted_PE Double
+    )
+    """
+
+    println("sqlCreatePowerPlantPredictions is executed: ")
+    spark.sql(sqlDeletePowerPlantPredictions)
+    spark.sql(sqlCreatePowerPlantPredictions)
+
+  }
 
   def main(args: Array[String]) {
     Logger.getLogger("org").setLevel(Level.WARN)
@@ -222,9 +252,9 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val explainedVariance3 = metrics3.explainedVariance
     val r2_3 = metrics3.r2
 
-    println (f"Root Mean Squared Error: $rmse3")
-    println (f"Explained Variance: $explainedVariance3")
-    println (f"R2: $r2_3")
+    println (f"Root Mean Squared Error3: $rmse3")
+    println (f"Explained Variance3: $explainedVariance3")
+    println (f"R2_3: $r2_3")
 
     // This line will pull the Decision Tree model from the Pipeline as display it as an if-then-else string
     dtModel.bestModel.asInstanceOf[PipelineModel].stages.last.asInstanceOf[DecisionTreeRegressionModel].toDebugString
@@ -267,30 +297,29 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val r2_4 = metrics4.r2
     gbtModel.bestModel.asInstanceOf[PipelineModel].stages.last.asInstanceOf[GBTRegressionModel].toDebugString
 
-    println (f"Root Mean Squared Error: $rmse4")
-    println (f"Explained Variance: $explainedVariance4")
-    println (f"R2: $r2_4")
+    println (f"Root Mean Squared Error4: $rmse4")
+    println (f"Explained Variance4: $explainedVariance4")
+    println (f"R2_4: $r2_4")
 
 
 
     // Let's set the variable finalModel to our best GBT Model
     val finalModel = gbtModel.bestModel
 
-
-    val sqlCreatePowerPlantPredictions =
-      """DROP TABLE IF EXISTS power_plant_predictions ;
-             |CREATE TABLE power_plant_predictions(
-             |  AT Double,
-             |  V Double,
-             |  AP Double,
-             |  RH Double,
-             |  PE Double,
-             |  Predicted_PE Double
-             |)
-      """.stripMargin
+    val sqlDeletePowerPlantPredictions = "DROP TABLE IF EXISTS power_plant_predictions"
+    val sqlCreatePowerPlantPredictions = """CREATE TABLE power_plant_predictions(
+      AT Double,
+      V Double,
+      AP Double,
+      RH Double,
+      PE Double,
+      Predicted_PE Double
+    )
+    """
 
     println("sqlCreatePowerPlantPredictions is executed: ")
-    spark.sql(sqlCreatePowerPlantPredictions).show(false)
+    spark.sql(sqlDeletePowerPlantPredictions)
+    spark.sql(sqlCreatePowerPlantPredictions)
 
 //    val powerPlant = rawTextRdd
 //      .map(x => x.split("\t"))
@@ -299,12 +328,87 @@ object NB_20160606_Power_Plant_ML_Pipeline {
 //    powerPlant.take(5)
 
 
-    println("hello, end")
+
+    // Streaming
+
+    import java.nio.ByteBuffer
+    import java.net._
+    import java.io._
+    import scala.io._
+    import sys.process._
+    // import org.apache.spark.Logging
+    import org.apache.spark.SparkConf
+    import org.apache.spark.storage.StorageLevel
+    import org.apache.spark.streaming.Seconds
+    import org.apache.spark.streaming.Minutes
+    import org.apache.spark.streaming.StreamingContext
+    //import org.apache.spark.streaming.StreamingContext.toPairDStreamFunctions
+    //import org.apache.log4j.Logger
+    //import org.apache.log4j.Level
+    import org.apache.spark.streaming.receiver.Receiver
+    import sqlContext._
+    //import net.liftweb.json.DefaultFormats
+    //import net.liftweb.json._
+
+    import scala.collection.mutable.SynchronizedQueue
+
+
+    val queue = new SynchronizedQueue[RDD[String]]()
+
+    queue += sc.makeRDD(Seq(s"""{"AT":1.11,"V":22.2,"AP":3333.33,"RH":44.44,"PE":555.5}"""))
+
+    val batchIntervalSeconds = 2
+
+    var newContextCreated = false      // Flag to detect whether new context was created or not
+
+    // Function to create a new StreamingContext and set it up
+    def creatingFunc(): StreamingContext = {
+
+      // Create a StreamingContext
+      val ssc = new StreamingContext(sc, Seconds(batchIntervalSeconds))
+      val batchInterval = Seconds(1)
+      ssc.remember(Seconds(300))
+      val dstream = ssc.queueStream(queue)
+      dstream.foreachRDD {
+        rdd =>
+          if(!(rdd.isEmpty())) {
+            println("rdd is not empty!")
+            rdd.take(3).foreach(println)
+            finalModel.transform(read.json(rdd).toDF()).write.mode(SaveMode.Overwrite).saveAsTable("power_plant_predictions")
+          } else {
+            println("rdd is empty!")
+          }
+      }
+      println("Creating function called to create new StreamingContext for Power Plant Predictions")
+      newContextCreated = true
+      ssc
+    }
+
+    val ssc = StreamingContext.getActiveOrCreate(creatingFunc)
+    if (newContextCreated) {
+      println("New context created from currently defined creating function")
+    } else {
+      println("Existing context running or recovered from checkpoint, may not be running currently defined creating function")
+    }
+
+    println("hello, end1")
     val abc = 1
 
+    ssc.start()
+
+//   // spark.sql("truncate table power_plant_predictions")
+//    // First we try it with a record from our test set and see what we get:
+//    queue += sc.makeRDD(Seq(s"""{"AT":10.82,"V":37.5,"AP":1009.23,"RH":96.62,"PE":473.9}"""))
+//    spark.sql("select * from power_plant_predictions").show(false)
+//
+//    queue += sc.makeRDD(Seq(s"""{"AT":10.0,"V":40,"AP":1000,"RH":90.0,"PE":0.0}"""))
+//    spark.sql("select * from power_plant_predictions").show(false)
+
+    val sqlString = "select * from power_plant where at between 10 and 11 and AP between 1000 and 1010 and RH between 90 and 97 and v between 37 and 40 order by PE"
+    spark.sql(sqlString).show(false)
+
+    println("hello, end2")
   }
-
-
 }
 
 case class PowerPlantRow(AT: Double, V : Double, AP : Double, RH : Double, PE : Double)

@@ -25,9 +25,10 @@ Output file:
         spark2.0-examples/src/main/resources/stream/ck
         spark2.0-examples/src/main/resources/stream/out/_spark_metadata
         
-net.liftweb	lift-json_2.11		Select        
+## add net.liftweb	lift-json_2.11 as external jar 
         
-local: 
-
-    cd /Users/kevinwu/Documents/zw_codes/GitLab/spark2_codes/spark2.0-examples
-    echo -e '{"latname":"Jones", "email":"Jones@gmail.com", "hits":3}\n{"latname":"Smith", "email":"smith@gmail.com", "hits":5}' >> src/main/resources/stream/in/d1.txt
+IntelliJ IDEA 15 & 2016
+- File > Project Structure... or press Ctrl + Alt + Shift + S.
+- Project Settings > Modules > Dependencies > "+" sign > JARs or directories...
+- Select the jar file and click on OK, then click on another OK button to confirm.
+- You can view the jar file in the "External Libraries" folder.        

@@ -73,6 +73,8 @@ object Dependencies {
 
   val spark_testing_base = "com.holdenkarau" % "spark-testing-base_2.11" % "2.2.0_0.7.2" % "test"
 
+  val net_liftweb = "net.liftweb" % "lift-json_2.11" % "3.1.0"
+
   val default_dependencies_seq = Seq(
     (spark_core)
       .exclude("net.java.dev.jets3t", "jets3t"), // % Provided,
@@ -92,6 +94,7 @@ object Dependencies {
     hadoop_aws,
     quartz,
     twitter_algebird,
+    net_liftweb,
 //    viafoura_monitoring,
     scalatest % Test,
     junit  % Test
@@ -116,6 +119,7 @@ object Dependencies {
     hadoop_aws,
     quartz,
     twitter_algebird,
+    net_liftweb,
 //    viafoura_monitoring,
     scalatest % Test,
     junit  % Test
