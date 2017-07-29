@@ -19,9 +19,9 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 // download source file: https://archive.ics.uci.edu/ml/datasets/Combined+Cycle+Power+Plant
 object NB_20160606_Power_Plant_ML_Pipeline {
 
-  Logger.getLogger("org").setLevel(Level.WARN)
-  Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass).setLevel(Level.WARN)
-  val logger = Logger.getLogger(NB_20160606_02_Wikipedia_Pageviews.getClass)
+  Logger.getLogger("org").setLevel(Level.ERROR)
+  Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass).setLevel(Level.ERROR)
+  val logger = Logger.getLogger(NB_20160606_Power_Plant_ML_Pipeline.getClass)
 
 //  val spark = getSparkSession()
 //  val sc = spark.sparkContext
@@ -70,12 +70,20 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val (vectorizer: VectorAssembler, dataset: Dataset[Row], testSet: Dataset[Row], trainingSet: Dataset[Row]) = trainAndTestDataPrepration(spark)
     val crossval = new CrossValidator()
 
-    val (rmse1, explainedVariance1, r2_1) = linearRegressionModel(spark, vectorizer, trainingSet, testSet, crossval, dataset)
+    val (rmse2, explainedVariance2, r2_2) = linearRegressionModel(spark, vectorizer, trainingSet, testSet, crossval, dataset)
 
     val (rmse3, explainedVariance3, r2_3) = decisionTreeModel(vectorizer, trainingSet, testSet, crossval)
 
 //     val (rmse4, explainedVariance4, r2_4, finalModel) = gbtModel(spark, vectorizer, trainingSet, testSet, crossval)
     val finalModel = gbtModel(spark, vectorizer, trainingSet, testSet, crossval)
+
+    println(f"Root Mean Squared Error2:  $rmse2")
+    println(f"Explained Variance2: $explainedVariance2")
+    println(f"R2_2: $r2_2")
+
+    println(f"Root Mean Squared Error3: $rmse3")
+    println(f"Explained Variance3: $explainedVariance3")
+    println(f"R2_3: $r2_3")
 
     sparkStreamingPowerPlant(spark, finalModel)
 
@@ -99,17 +107,17 @@ object NB_20160606_Power_Plant_ML_Pipeline {
 
     powerPlantDF.createOrReplaceTempView("power_plant")
 
-    spark.sql("SELECT * FROM power_plant").show(false)
-    spark.sql("desc power_plant").show(false)
+//    spark.sql("SELECT * FROM power_plant").show(false)
+//    spark.sql("desc power_plant").show(false)
+
     spark.sqlContext.table("power_plant").describe().show(false)
 
     // ANSWER: Do a scatter plot of Power(PE) as a function of Temperature (AT).
     // BONUS: Name the y-axis "Power" and the x-axis "Temperature"
-    spark.sql("select AT as Temperature, PE as Power from power_plant").show(false)
 
-    spark.sql("select V as ExhaustVacuum, PE as Power from power_plant").show(false)
-
-    spark.sql("select RH Humidity, PE Power from power_plant").show(false)
+//    spark.sql("select AT as Temperature, PE as Power from power_plant").show(false)
+//    spark.sql("select V as ExhaustVacuum, PE as Power from power_plant").show(false)
+//    spark.sql("select RH Humidity, PE Power from power_plant").show(false)
 
     println("End to readInputData()")
     rawTextDF
@@ -216,27 +224,28 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     import org.apache.spark.mllib.evaluation.RegressionMetrics
     val metrics = new RegressionMetrics(predictionsAndLabels.select("Predicted_PE", "PE").rdd.map(r => (r(0).asInstanceOf[Double], r(1).asInstanceOf[Double])))
 
-    val rmse = metrics.rootMeanSquaredError
-    val explainedVariance = metrics.explainedVariance
-    val r2 = metrics.r2
+    val rmse1 = metrics.rootMeanSquaredError
+    val explainedVariance1 = metrics.explainedVariance
+    val r2_1 = metrics.r2
 
-    println(f"Root Mean Squared Error: $rmse")
-    println(f"Explained Variance: $explainedVariance")
-    println(f"R2: $r2")
+    println(f"Root Mean Squared Error1: $rmse1")
+    println(f"Explained Variance1: $explainedVariance1")
+    println(f"R2_1: $r2_1")
 
     println("End to linearRegressionModel()")
 
     // First we calculate the residual error and divide it by the RMSE
-    predictionsAndLabels.selectExpr("PE", "Predicted_PE", "PE - Predicted_PE Residual_Error", s""" abs(PE - Predicted_PE) / $rmse Within_RSME""").createOrReplaceTempView("Power_Plant_RMSE_Evaluation")
+    predictionsAndLabels.selectExpr("PE", "Predicted_PE", "PE - Predicted_PE Residual_Error", s""" abs(PE - Predicted_PE) / $rmse1 Within_RSME""").createOrReplaceTempView("Power_Plant_RMSE_Evaluation")
 
     // First we calculate the residual error and divide it by the RMSE
-    spark.sql("SELECT * from Power_Plant_RMSE_Evaluation").show(false)
+
+//    spark.sql("SELECT * from Power_Plant_RMSE_Evaluation").show(false)
 
     // Now we can display the RMSE as a Histogram. Clearly this shows that the RMSE is centered around 0 with the vast majority of the error within 2 RMSEs.
-    spark.sql("SELECT Within_RSME  from Power_Plant_RMSE_Evaluation").show(false)
+//    spark.sql("SELECT Within_RSME  from Power_Plant_RMSE_Evaluation").show(false)
 
-    val sqlQuery = "SELECT case when Within_RSME <= 1.0 and Within_RSME >= -1.0 then 1  when  Within_RSME <= 2.0 and Within_RSME >= -2.0 then 2 else 3 end RSME_Multiple, COUNT(*) count  from Power_Plant_RMSE_Evaluation\ngroup by case when Within_RSME <= 1.0 and Within_RSME >= -1.0 then 1  when  Within_RSME <= 2.0 and Within_RSME >= -2.0 then 2 else 3 end"
-    spark.sql(sqlQuery).show(false)
+//    val sqlQuery = "SELECT case when Within_RSME <= 1.0 and Within_RSME >= -1.0 then 1  when  Within_RSME <= 2.0 and Within_RSME >= -2.0 then 2 else 3 end RSME_Multiple, COUNT(*) count  from Power_Plant_RMSE_Evaluation\ngroup by case when Within_RSME <= 1.0 and Within_RSME >= -1.0 then 1  when  Within_RSME <= 2.0 and Within_RSME >= -2.0 then 2 else 3 end"
+//    spark.sql(sqlQuery).show(false)
 
     println("Begin to fine tune linearRegressionModel()")
 
@@ -277,7 +286,7 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     val explainedVariance2 = metrics2.explainedVariance
     val r2_2 = metrics2.r2
 
-    println(f"Root Mean Squared Error2: " + rmse2)
+    println(f"Root Mean Squared Error2: $rmse2")
     println(f"Explained Variance2: $explainedVariance2")
     println(f"R2_2: $r2_2")
 
@@ -416,8 +425,8 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     """
 
     println("sqlCreatePowerPlantPredictions is executed: ")
-    spark.sql(sqlDeletePowerPlantPredictions)
-    spark.sql(sqlCreatePowerPlantPredictions)
+//    spark.sql(sqlDeletePowerPlantPredictions)
+//    spark.sql(sqlCreatePowerPlantPredictions)
 
     // can not return multiple value, do not conform to class Model's type parameter bounds [M <: org.apache.spark.ml.Model[M]]
     //  (rmse4, explainedVariance4, r2_4, finalModel)
@@ -495,8 +504,8 @@ object NB_20160606_Power_Plant_ML_Pipeline {
     //    queue += sc.makeRDD(Seq(s"""{"AT":10.0,"V":40,"AP":1000,"RH":90.0,"PE":0.0}"""))
     //    spark.sql("select * from power_plant_predictions").show(false)
 
-    val sqlString = "select * from power_plant where at between 10 and 11 and AP between 1000 and 1010 and RH between 90 and 97 and v between 37 and 40 order by PE"
-    spark.sql(sqlString).show(false)
+//    val sqlString = "select * from power_plant where at between 10 and 11 and AP between 1000 and 1010 and RH between 90 and 97 and v between 37 and 40 order by PE"
+//    spark.sql(sqlString).show(false)
 
     println("hello, end1")
     val abc = 1

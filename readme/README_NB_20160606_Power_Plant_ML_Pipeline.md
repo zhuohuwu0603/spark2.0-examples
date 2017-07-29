@@ -27,6 +27,53 @@ Inputfile:
                  //gbt.setMaxIter(120)
                  
          It will take about 9 minutes to finish. 
+
+## Result:
+
+- small iteration (10 iterations)
+```
+LR: 
+    Root Mean Squared Error1: 4.5411092924667
+    Explained Variance1: 272.86639197067933
+    R2_1: 0.9300671383202985
+
+Tuned LR: 
+    Root Mean Squared Error2: 4.541393856591181
+    Explained Variance2: 272.5921845811232
+    R2_2: 0.9300583734984044
+DT:
+    Root Mean Squared Error3: 5.232606511264802
+    Explained Variance3: 266.0281473341642
+    R2_3: 0.9071475118358783    
+
+GBT:         
+    Root Mean Squared Error4: 4.754059362101928
+    Explained Variance4: 275.66518968018397
+    R2_4: 0.923354512301011            
+```
+
+- large iterations (120 iterations)
+```
+LR: 
+    Root Mean Squared Error1: 4.5411092924667
+    Explained Variance1: 272.86639197067933
+    R2_1: 0.9300671383202985
+
+Tuned LR: 
+    Root Mean Squared Error2:  4.541393856591015
+    Explained Variance2: 272.59218458111656
+    R2_2: 0.9300583734984095
+DT:
+    Root Mean Squared Error3: 5.131856718248588
+    Explained Variance3: 266.916192715665
+    R2_3: 0.9106886948232996    
+
+GBT:         
+    Root Mean Squared Error4: 3.6127999377652795
+    Explained Variance4: 279.69829188010834
+    R2_4: 0.9557365544772013            
+```
+
             
         
 ## add net.liftweb	lift-json_2.11 as external jar  (optional), just show how to add a jar dependency
