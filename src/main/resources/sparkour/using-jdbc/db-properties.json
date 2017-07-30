@@ -1,0 +1,5 @@
+{
+    "jdbcUrl": "jdbc:mysql://localhost:3306/sparkour",
+    "user": "sparkour",
+    "password": "123456"
+}
