@@ -1,4 +1,4 @@
-# Power Plant ML Pipeline Application
+# 02-De-Pageviews Application
 ## notebook link:
 
 https://community.cloud.databricks.com/?o=8920468172695095#notebook/1809612576125024/command/1809612576125084
@@ -7,12 +7,14 @@ data:
     download: https://datahub.io/en/dataset/english-wikipedia-pageviews-by-second
     
 ## summary:
-- Objective: Analyze Desktop vs Mobile traffic to English Wikipedia
+Objective: Analyze Desktop vs Mobile traffic to English Wikipedia
 - Time to Complete: 30 mins
+
 - Data Source: pageviews_by_second (255 MB)
 - Business Questions:
     Question # 1) How many rows in the table refer to mobile vs desktop?
-- Technical Accomplishments:
+
+Technical Accomplishments:
 - Upload a file to Databricks using the Tables UI
 - Learn how Actions kick off Jobs + Stages
 - Understand how DataFrame partitions relate to compute tasks
