@@ -58,7 +58,8 @@ libraryDependencies ++= Seq(
       spark_testing_base,
       mysql_connector_java,
       mysql_connector_mxj,
-      mysql_connector_mxj_db_file
+      mysql_connector_mxj_db_file,
+      scopt
 )
 
 /*

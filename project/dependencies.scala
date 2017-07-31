@@ -75,6 +75,8 @@ object Dependencies {
 
   val net_liftweb = "net.liftweb" % "lift-json_2.11" % "3.1.0"
 
+  val scopt = "com.github.scopt" % "scopt_2.11" % "3.3.0"
+
   val default_dependencies_seq = Seq(
     (spark_core)
       .exclude("net.java.dev.jets3t", "jets3t"), // % Provided,
