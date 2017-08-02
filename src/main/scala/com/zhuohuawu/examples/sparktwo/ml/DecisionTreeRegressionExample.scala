@@ -28,6 +28,7 @@ import org.apache.spark.sql.SparkSession
 
 object DecisionTreeRegressionExample {
   def main(args: Array[String]): Unit = {
+
     val spark = SparkSession
       .builder
       .appName("DecisionTreeRegressionExample")
