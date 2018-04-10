@@ -3,6 +3,9 @@ Examples for Spark 2.0 release.
 # Build
     sbt clean package
     
+# Run argument
+    Main class: com.zhuohuawu.examples.sparktwo.sparkour.SWorkingRDDs
+    vm arguments: -Dspark.master=local[4]
     
 # Add test
     - cmd + shift + T: create new test cases (it will auto-create the folder structure in test, if there is problem, run sbt clean and re-create)
