@@ -59,6 +59,7 @@ libraryDependencies ++= Seq(
       mysql_connector_java,
       mysql_connector_mxj,
       mysql_connector_mxj_db_file,
+      spark_avro,
       scopt
 )
 
