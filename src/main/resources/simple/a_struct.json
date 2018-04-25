@@ -1,0 +1,7 @@
+{
+  "a_struct": {
+    "field_1" : 1,
+    "field_2" : "b",
+    "field_3" : {"filed4Key" : "filed4Value"}
+  }
+}
