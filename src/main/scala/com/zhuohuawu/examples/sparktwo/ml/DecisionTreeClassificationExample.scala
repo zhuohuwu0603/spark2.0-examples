@@ -23,10 +23,13 @@ import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+import org.slf4j.LoggerFactory
 // $example off$
 import org.apache.spark.sql.SparkSession
 
 object DecisionTreeClassificationExample {
+
+  val logger = LoggerFactory.getLogger("DecisionTreeClassificationExample")
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder
