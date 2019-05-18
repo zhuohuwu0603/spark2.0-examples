@@ -8,10 +8,6 @@ import org.apache.spark.sql.SparkSession
   *
   */
 
-/** TODO not tested
-  *
-  */
-
 object Ch10_01_Spark_sql {
 
   val logger = Logger.getLogger(Ch10_01_Spark_sql.getClass)

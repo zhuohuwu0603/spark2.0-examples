@@ -8,9 +8,6 @@ import org.apache.spark.sql.SparkSession
   *
   */
 
-/** TODO not tested
-  *
-  */
 
 object Ch09_01_Data_Sources {
 
