@@ -13,7 +13,7 @@ object Ch02_01_Introuction {
 
   def main(args: Array[String]) {
 
-    logger.error("Beginning of SparkSessionExample.")
+
 
     val BASEPATH = "/Users/zhuohuawu/Documents/data/spark-definitive-guide"
 
@@ -21,6 +21,10 @@ object Ch02_01_Introuction {
       master("local")
       .appName("spark session example")
       .getOrCreate()
+
+    spark.sparkContext.setLogLevel("ERROR")
+
+    logger.error("Beginning of SparkSessionExample.")
 
     val myRange = spark.range(1000).toDF("number")
     myRange.show(false)
