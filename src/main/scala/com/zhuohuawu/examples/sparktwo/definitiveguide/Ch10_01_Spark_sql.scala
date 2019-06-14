@@ -23,6 +23,7 @@ object Ch10_01_Spark_sql {
       master("local")
       .appName("spark session example")
       .getOrCreate()
+    spark.sparkContext.setLogLevel("ERROR")
 
     spark.sql("SELECT 1 + 1").show()
 
